@@ -184,7 +184,7 @@
 
   .hero-sub {
     font-size: 1.15rem;
-    color: var(--text-secondary);
+    color: var(--text-primary);
     max-width: 800px;
     line-height: 1.75;
     margin-bottom: 3rem;
@@ -266,7 +266,7 @@
     align-items: start;
   }
   .about-text p {
-    color: var(--text-secondary);
+    color: var(--text-primary);
     font-size: 1rem;
     font-weight: 300;
     line-height: 1.85;
@@ -539,7 +539,7 @@
   }
   .contact-info p {
     font-size: 1rem;
-    color: var(--text-secondary);
+    color: var(--text-primary);
     line-height: 1.8;
     font-weight: 300;
     margin-bottom: 2.5rem;
@@ -551,7 +551,7 @@
   .contact-link {
     display: flex; align-items: center; gap: 1rem;
     text-decoration: none;
-    color: var(--text-secondary);
+    color: var(--text-primary);
     transition: color 0.2s;
     padding: 0.75rem 0;
     border-bottom: 1px solid var(--border);
@@ -1183,7 +1183,7 @@ document.querySelector('.submit-btn').addEventListener('click', function() {
     W = canvas.width = window.innerWidth;
     H = canvas.height = window.innerHeight;
     buildNebula();
-    const count = Math.min(Math.floor(W * H / 733), 1500);
+    const count = Math.min(Math.floor(W * H / 488), 2250);
     stars = [];
     for (let i = 0; i < count; i++) stars.push(createStar(false));
   }
@@ -1244,20 +1244,26 @@ document.querySelector('.submit-btn').addEventListener('click', function() {
       s.twinkle += s.twinkleSpeed;
       const tf = 0.75 + 0.25 * Math.sin(s.twinkle);
 
-      // Attract toward cursor (account for scroll)
+      // Attract toward cursor — cluster around, not converge to point
       if (mouse.hasMoved) {
-        const mx = m.x;
-        const my = m.y + scrollY; // mouse in page coords
-        const starPageY = s.y + scrollY; // star is in viewport coords, but we compare in page
-        // Actually stars are drawn in canvas (viewport) coords, mouse is also viewport
         const dx = m.x - s.x;
         const dy = m.y - s.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
+        const equilibrium = 55 + s.coreR * 12; // ~60-70px comfort zone
         if (dist < s.influence && dist > 1) {
-          const force = (s.influence - dist) / s.influence;
-          const strength = force * force * 0.9;
-          s.vx += (dx / dist) * strength;
-          s.vy += (dy / dist) * strength;
+          if (dist > equilibrium) {
+            // Pull inward (gentle)
+            const force = (s.influence - dist) / s.influence;
+            const strength = force * force * 3.6;
+            s.vx += (dx / dist) * strength;
+            s.vy += (dy / dist) * strength;
+          } else {
+            // Soft repel outward — prevents piling onto cursor
+            const pushForce = (equilibrium - dist) / equilibrium;
+            const pushStrength = pushForce * 0.6;
+            s.vx -= (dx / dist) * pushStrength;
+            s.vy -= (dy / dist) * pushStrength;
+          }
         }
       }
 
